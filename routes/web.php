@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\PlateRecordingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/plateRecording', [PlateRecordingController::class, 'index'])->name('plateRecording');
+    Route::get('/plateRecording/history', [PlateRecordingController::class, 'history'])->name('plateRecording.history');
 });
+
 
 require __DIR__.'/auth.php';
