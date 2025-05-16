@@ -31,7 +31,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Route::get('/plate-recordings/{id}', [PlateRecordingController::class, 'show']); // chi tiết
 
 
-Route::post('/plate-record', [PlateRecordingController::class, 'store']);
+Route::middleware('auth:sanctum')->post('/plate-record', [PlateRecordingController::class, 'store']);
 
 
 Route::post('/login', function (Request $request) {

@@ -1,0 +1,151 @@
+openapi: 3.0.0
+info:
+  title: Swap
+  description: API for managing swap resources
+  version: 1.0.0
+
+servers:
+  - url: https://hhtm-1.onrender.com
+  - url: http://localhost:8000
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /api/login:
+    post:
+      summary: Đăng nhập và lấy token
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  example: your_password
+      responses:
+        '200':
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: 1|XyzAbcTokenExample
+        '401':
+          description: Đăng nhập thất bại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Thông tin đăng nhập không đúng
+
+  /api/plate-record:
+    post:
+      summary: Ghi nhận xe vào bãi
+      tags:
+        - PlateRecording
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                license_plate:
+                  type: string
+                  example: 29V2-2222
+                vehicle_type:
+                  type: string
+                  example: Xe may
+                time:
+                  type: string
+                  format: date-time
+                  example: 2025-05-16T14:19:00.542419
+                img:
+                  type: string
+                  format: uri
+                  example: https://res.cloudinary.com/dr1uftsqc/image/upload/v1747379940/nwciucobgfekkex7ddog.jpg
+      responses:
+        '200':
+          description: Ghi nhận thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: in
+                  message:
+                    type: string
+                    example: Xe mới được ghi nhận vào bãi
+                  data:
+                    type: object
+                    properties:
+                      license_plate:
+                        type: string
+                        example: 29V2-2222
+                      vehicle_type:
+                        type: string
+                        example: Xe may
+                      img:
+                        type: string
+                        example: https://res.cloudinary.com/dr1uftsqc/image/upload/v1747379940/nwciucobgfekkex7ddog.jpg
+                      check_in_time:
+                        type: string
+                        format: date-time
+                        example: 2025-05-16T14:19:00.542419
+                      check_out_time:
+                        type: string
+                        nullable: true
+                        example: null
+                      price:
+                        type: integer
+                        nullable: true
+                        example: null
+        '401':
+          description: Không có hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Unauthenticated."
+        '422':
+          description: Dữ liệu không hợp lệ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: The given data was invalid.
+                  errors:
+                    type: object
+                    example:
+                      license_plate: ["The license plate field is required."]
+                      vehicle_type: ["The vehicle type field is required."]
+                      time: ["The time field is required."]
+                      img: ["The img field is required."]

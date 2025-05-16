@@ -35,7 +35,7 @@
                                 <div class="flex items-center">
                                     <span class="w-40 font-semibold text-gray-700 dark:text-gray-300">Thời gian vào:</span>
                                     <span id="time" class="px-3 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                                        {{ $vehicle->time ?? '' }}
+                                        {{ $vehicle->check_in_time ?? '' }}
                                     </span>
                                 </div>
                                 <div class="flex items-center">

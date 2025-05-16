@@ -18,7 +18,7 @@ class PlateRecordingController extends Controller
     //     ]);
     // }
 
-    public function storeFromAI(Request $request)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'license_plate' => 'required|string',
@@ -95,10 +95,11 @@ class PlateRecordingController extends Controller
         ]);
     }
 
+    
     public function history(Request $request) 
     {
         return view('historyRecord', [
-            'vehicles' => PlateRecording::orderby('created_at', 'desc')->all(),
+            'vehicles' => PlateRecording::orderBy('created_at', 'desc')->get(),
         ]);
     }
 }
