@@ -1,11 +1,12 @@
 FROM richarvey/nginx-php-fpm:3.1.6
 
-# Cài Node.js & npm
 USER root
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get update && \
-    apt-get install -y nodejs && \
-    npm install -g npm
+
+# Cài Node.js & npm (Alpine)
+RUN apk add --no-cache nodejs npm
+
+# Đặt thư mục làm việc
+WORKDIR /var/www/html
 
 # Copy toàn bộ source vào container
 COPY . .
@@ -26,9 +27,7 @@ ENV LOG_CHANNEL stderr
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
 # Cài frontend và build Vite
-RUN cd /var/www/html && \
-    npm install && \
-    npm run build
+RUN npm install && npm run build
 
 # CMD khởi chạy container
 CMD ["/start.sh"]
