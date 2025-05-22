@@ -98,8 +98,31 @@ class PlateRecordingController extends Controller
     
     public function history(Request $request) 
     {
+        $query = PlateRecording::query();
+
+        // Filter by license plate
+        if ($request->has('license_plate') && $request->license_plate) {
+            $query->where('license_plate', 'like', '%' . $request->license_plate . '%');
+        }
+
+        // Filter by vehicle type
+        if ($request->has('vehicle_type') && $request->vehicle_type) {
+            $query->where('vehicle_type', $request->vehicle_type);
+        }
+
+        // Filter by date range
+        if ($request->has('start_date') && $request->start_date) {
+            $query->whereDate('check_in_time', '>=', $request->start_date);
+        }
+        if ($request->has('end_date') && $request->end_date) {
+            $query->whereDate('check_in_time', '<=', $request->end_date);
+        }
+
+        $vehicles = $query->orderBy('created_at', 'desc')->get();
+
         return view('historyRecord', [
-            'vehicles' => PlateRecording::orderBy('created_at', 'desc')->get(),
+            'vehicles' => $vehicles,
+            'filters' => $request->all()
         ]);
     }
 }
