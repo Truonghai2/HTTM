@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('license_plate');
             $table->string('vehicle_type');
             $table->text('img');
+            $table->string('cam_type');
+            $table->string('status')->default('in_active');
             $table->timestamp('check_in_time')->useCurrent();
             $table->timestamp('check_out_time')->nullable();
             $table->integer('price')->nullable();

@@ -23,14 +23,18 @@ class PlateRecordingController extends Controller
         $validated = $request->validate([
             'license_plate' => 'required|string',
             'vehicle_type' => 'required|string',
+            'cam_type' => 'required|string', // bỏ dấu cách dư ở 'cam_type '
             'img' => 'required|url',
             'time' => 'required|date',
         ]);
 
         $plate = strtoupper(trim($validated['license_plate']));
+        $camType = strtolower(trim($validated['cam_type'])); // 'in' hoặc 'out'
+        $time = \Carbon\Carbon::parse($validated['time']);
 
         $existing = PlateRecording::where('license_plate', $plate)
             ->whereNull('check_out_time')
+            ->orderByDesc('check_in_time')
             ->first();
 
         $pusher = new Pusher(
@@ -43,9 +47,51 @@ class PlateRecordingController extends Controller
             ]
         );
 
-        if ($existing) {
-            $existing->check_out_time = \Carbon\Carbon::parse($validated['time']);
+        if ($camType === 'in') {
+            // Nếu đã active thì không thể vào
+            if ($existing && $existing->status === 'active') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Xe đã có trong bãi, không thể vào tiếp.'
+                ], 400);
+            }
+
+            $record = PlateRecording::create([
+                'license_plate' => $plate,
+                'vehicle_type' => $validated['vehicle_type'],
+                'img' => $validated['img'],
+                'cam_type' => 'in',
+                'status' => 'active',
+                'check_in_time' => $time,
+            ]);
+
+            $pusher->trigger('vehicle-channel', 'vehicle-updated', [
+                'license_plate' => $record->license_plate,
+                'vehicle_type' => $record->vehicle_type,
+                'img' => $record->img,
+                'time' => $record->check_in_time,
+                'check_out_time' => null,
+                'price' => null,
+            ]);
+
+            return response()->json([
+                'status' => 'in',
+                'message' => 'Xe mới được ghi nhận vào bãi.',
+                'data' => $record
+            ]);
+        } elseif ($camType === 'out') {
+            // Nếu không tồn tại hoặc status là in_active, không thể ra
+            if (!$existing || $existing->status === 'in_active') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Không tìm thấy xe trong bãi hoặc xe đã ra.'
+                ], 400);
+            }
+
+            $existing->check_out_time = $time;
             $existing->price = $existing->calculatePrice();
+            $existing->status = 'in_active';
+            $existing->cam_type = 'out';
             $existing->save();
 
             $pusher->trigger('vehicle-channel', 'vehicle-updated', [
@@ -59,44 +105,28 @@ class PlateRecordingController extends Controller
 
             return response()->json([
                 'status' => 'out',
-                'message' => 'Xe đã được xử lý ra bãi',
+                'message' => 'Xe đã được xử lý ra khỏi bãi.',
                 'data' => $existing
             ]);
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Loại camera không hợp lệ. Phải là "in" hoặc "out".'
+            ], 422);
         }
-
-        $record = PlateRecording::create([
-            'license_plate' => $plate,
-            'vehicle_type' => $validated['vehicle_type'],
-            'img' => $validated['img'],
-            'check_in_time' => \Carbon\Carbon::parse($validated['time']),
-        ]);
-
-        $pusher->trigger('vehicle-channel', 'vehicle-updated', [
-            'license_plate' => $record->license_plate,
-            'vehicle_type' => $record->vehicle_type,
-            'img' => $record->img,
-            'time' => $record->check_in_time,
-            'check_out_time' => $record->check_out_time,
-            'price' => $record->price,
-        ]);
-
-        return response()->json([
-            'status' => 'in',
-            'message' => 'Xe mới được ghi nhận vào bãi',
-            'data' => $record
-        ]);
     }
 
 
-    public function index(Request $request) 
+
+    public function index(Request $request)
     {
         return view('plateRecording', [
             'vehicle' => PlateRecording::orderby('created_at', 'desc')->first(),
         ]);
     }
 
-    
-    public function history(Request $request) 
+
+    public function history(Request $request)
     {
         $query = PlateRecording::query();
 

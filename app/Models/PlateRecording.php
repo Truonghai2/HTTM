@@ -18,6 +18,8 @@ class PlateRecording extends Model
         'vehicle_type',
         'check_in_time',
         'check_out_time',
+        'cam_tpye',
+        'status',
         'img',
         'price'
     ];
